@@ -6,8 +6,9 @@
 </div>
 
 **中文** | [English](./README.md)
-
+本项目是基于 VUE Vben Admin改造的
 ## 简介
+
 
 Vue Vben Admin 是一个免费开源的中后台模版。使用了最新的`vue3`,`vite4`,`TypeScript`等主流技术开发，开箱即用的中后台前端解决方案，也可用于学习参考。
 
@@ -170,21 +171,3 @@ docker run --name vue-vben-admin -d -p 6666:80  -e VG_BASE_URL=http://localhost:
 ## 维护者
 
 [@Vben](https://github.com/anncwb)
-
-## 捐赠
-
-如果你觉得这个项目对你有帮助，你可以帮作者买一杯咖啡表示支持!
-
-![donate](https://anncwb.github.io/anncwb/images/sponsor.png)
-
-<a style="display: block;width: 100px;height: 50px;line-height: 50px; color: #fff;text-align: center; background: #408aed;border-radius: 4px;" href="https://www.paypal.com/paypalme/cvvben">Paypal Me</a>
-
-## 交流
-
-`Vue-vben-Admin` 是完全开源免费的项目，在帮助开发者更方便地进行中大型管理系统开发，同时也提供 QQ 交流群使用问题欢迎在群内提问。
-
-- QQ 群 `569291866`
-
-## License
-
-[MIT © Vben-2020](./LICENSE)
