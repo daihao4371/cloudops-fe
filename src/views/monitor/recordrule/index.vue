@@ -1,0 +1,260 @@
+<template>
+  <div>
+    <BasicTable @register="registerTable">
+      <template #toolbar>
+        <a-button type="primary" @click="handleCreate"> 新增预聚合规则 </a-button>
+        <a-button class="mr-2" type="success" @click="batchEnableSwitch"> 批量开关规则 </a-button>
+        <a-button class="mr-2" type="danger" @click="batchDelete"> 批量删除规则 </a-button>
+      </template>
+      <template #bodyCell="{ column, record }">
+
+
+        <template v-if="column.key === 'enable'">
+
+<!--          <a-switch checked-children="开启" un-checked-children="关闭" :checked="enableCheckFunc(record.enable)"   />-->
+          <a-switch checked-children="开启" un-checked-children="关闭" :checked="record.enable === 1 ? true : false"  @change="changeEnable(record)"  />
+
+
+        </template>
+
+
+
+        <template v-if="column.key === 'poolName'">
+
+          <router-link target="_blank"  :to="{path:'/monitor/pool'}">
+            <a-button type="success">  {{ record.poolName }}</a-button>
+          </router-link>
+        </template>
+
+
+        <template v-if="column.key === 'nodePath'">
+
+          <router-link target="_blank"  :to="{path:'/serviceTree/streeAsync'}">
+            <a-tag color="orange">  {{ record.nodePath }}</a-tag>
+          </router-link>
+        </template>
+
+        <template v-if="column.key === 'sendGroupName'">
+
+          <router-link target="_blank"  :to="{path:'/monitor/sendgroup'}">
+            <a-button type="danger">  {{ record.sendGroupName }}</a-button>
+          </router-link>
+        </template>
+
+<!--        <template v-if="column.key === 'name'">-->
+
+<!--          <router-link target="_blank" :to="{path:'/monitor/ondutygroup-plan',query:{id: record.id}}">-->
+<!--            <button>  {{ record.name }}</button>-->
+<!--          </router-link>-->
+<!--        </template>-->
+        <template v-if="column.key === 'action'">
+          <TableAction
+            :actions="[
+              {
+                icon: 'clarity:note-edit-line',
+                onClick: handleEdit.bind(null, record),
+                label: '编辑'
+              },
+
+              {
+                icon: 'ant-design:delete-outlined',
+                color: 'error',
+                label: '删除',
+                popConfirm: {
+                  title: '是否确认删除',
+                  placement: 'left',
+                  confirm: handleDelete.bind(null, record),
+                },
+              },
+            ]"
+          />
+        </template>
+      </template>
+    </BasicTable>
+    <ProcessDrawer @register="registerDrawer" @success="handleSuccess" />
+
+
+  </div>
+</template>
+
+<script lang="ts" setup>
+
+import { defineComponent , ref } from 'vue';
+
+import { BasicTable, useTable, TableAction } from '/@/components/Table';
+import {
+  deleteProcess,
+  deleteRole,
+  getProcessList,
+  getMonitorRecordRuleList,
+  deleteMonitorRecordRule,
+
+  enableSwitchMonitorRecordRule,
+  batchEnableSwitchMonitorRecordRule,
+  batchDeleteMonitorRecordRule,
+  setRoleStatus
+} from '/@/api/demo/system';
+
+import { useDrawer } from '/@/components/Drawer';
+import ProcessDrawer from './AlertDrawer.vue';
+
+import { columns, searchFormSchema } from './data';
+import {useMessage} from "@/hooks/web/useMessage";
+import {TreeItem} from "@/components/Tree";
+import {router} from "@/router";
+const { createMessage } = useMessage();
+const [registerDrawer, { openDrawer }] = useDrawer();
+const [registerTable, { reload,          getSelectRowKeys, }] = useTable({
+  title: '预聚合规则列表',
+  api: getMonitorRecordRuleList,
+  columns,
+  formConfig: {
+    labelWidth: 200,
+    schemas: searchFormSchema,
+  },
+  rowKey: 'id',
+  rowSelection: {
+    type: 'checkbox',
+  },
+  useSearchForm: true,
+  showTableSetting: true,
+  bordered: true,
+  showIndexColumn: false,
+  actionColumn: {
+    width: 280,
+    title: '操作',
+    dataIndex: 'action',
+    // slots: { customRender: 'action' },
+  },
+
+});
+
+const tagsColorMap = {
+  "warning":"green" ,
+  "critical" :"red" ,
+  "test1": "success"
+}
+const tagsColorFunc = function (index){
+  let tmp = tagsColorMap[index]
+  if (tmp==null ){
+    tmp = "blue"
+  }
+  return tmp
+};
+
+const enableCheckFunc = function (enable:number){
+  if ( enable ===1){
+    return true
+  }
+  return false
+};
+
+function batchEnableSwitch() {
+  var keys = getSelectRowKeys()
+  if (keys.length ===0 ) {
+    createMessage.error('请选择规则');
+    return
+  }
+  const data ={}
+  data["ids"] =keys
+  batchEnableSwitchMonitorRecordRule(data).then(() => {
+    createMessage.success(`已批量开关预聚合规则`);
+    location.reload()
+  })
+    .catch(() => {
+      createMessage.error('批量开关预聚合规则失败');
+    })
+    .finally(() => {
+    });
+
+}
+
+function batchDelete() {
+
+  var keys = getSelectRowKeys()
+  if (keys.length ===0 ) {
+    createMessage.error('请选择规则');
+    return
+  }
+  const data ={}
+  data["ids"] =keys
+  data["ids"] = getSelectRowKeys()
+  batchDeleteMonitorRecordRule(data).then(() => {
+    createMessage.success(`已批量删除预聚合规则`);
+    location.reload()
+  })
+    .catch(() => {
+      createMessage.error('批量删除预聚合规则失败');
+    })
+    .finally(() => {
+    });
+
+}
+
+
+
+function changeEnable(record){
+  // console.log("changeEnable",record)
+
+  enableSwitchMonitorRecordRule(record.id).then(() => {
+    createMessage.success(`已成功开关预聚合规则`);
+    location.reload()
+  })
+    .catch(() => {
+      createMessage.error('开关预聚合规则失败');
+    })
+    .finally(() => {
+      record.pendingStatus = false;
+    });
+  // reload();
+
+  // record.enable=2
+
+}
+
+function showPrometheusYaml(ip,record){
+
+  var url= `/monitor/yaml?poolName=${record.name}&ip=${ip}`;
+  router.push(url)
+}
+
+function handleSuccess() {
+  reload();
+}
+
+function handleCreate() {
+  openDrawer(true, {
+    isUpdate: false,
+    func: reload,
+  });
+}
+
+function handleEdit(record: Recordable) {
+
+  openDrawer(true, {
+    record,
+    isUpdate: true,
+    func: reload,
+  });
+}
+
+function handleDelete(record: Recordable) {
+
+  deleteMonitorRecordRule(record.id).then(() => {
+    createMessage.success(`已成功删除预聚合规则`);
+    location.reload()
+  })
+    .catch(() => {
+      createMessage.error('删除预聚合规则失败');
+    })
+    .finally(() => {
+      record.pendingStatus = false;
+    });
+
+}
+
+</script>
+
+<style scoped>
+
+</style>
